@@ -70,6 +70,17 @@ class CategoryRepository:
             print("An exception occurred")
         return serializer.data
 
+    def add_sub_into_cate(self, list_category, sub_list, item):
+        sub_list.append({
+            'id': item['subcategory'],
+            'name': item['subcategory__name']
+        })
+        list_category.append({
+            'id': item['id'],
+            'name': item['name'],
+            'children': sub_list
+        })
+
     def get_category_and_detail_subcategory(self):
         category = Category.objects.filter(deleted_at=False).exclude(subcategory=None).values('id', 'name',
                                                                                               'status',
@@ -91,26 +102,10 @@ class CategoryRepository:
                         break
                 if flag == 0:
                     sub_list = list()
-                    sub_list.append({
-                        'id': item['subcategory'],
-                        'name': item['subcategory__name']
-                    })
-                    list_category.append({
-                        'id': item['id'],
-                        'name': item['name'],
-                        'children': sub_list
-                    })
+                    self.add_sub_into_cate(list_category, sub_list, item)
             else:
                 sub_list = list()
-                sub_list.append({
-                    'id': item['subcategory'],
-                    'name': item['subcategory__name']
-                })
-                list_category.append({
-                    'id': item['id'],
-                    'name': item['name'],
-                    'children': sub_list
-                })
+                self.add_sub_into_cate(list_category, sub_list, item)
         print(list_category)
         serializer = CategoryDetailSerializer(instance=list_category, many=True)
         return serializer.data
