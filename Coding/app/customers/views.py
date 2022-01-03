@@ -33,6 +33,7 @@ class LoginView(APIView):
             password = request.data.get('password')
             # print(User.objects.all())
             user_obj = User.objects.filter(username=username).first()
+            status_customer = user_obj.staff.status
             if user_obj is None:
                 raise AuthenticationFailed('User not found!')
 
@@ -44,7 +45,8 @@ class LoginView(APIView):
             print(user)
             if user is None:
                 raise AuthenticationFailed('Incorrect password!')
-
+            if status_customer is False:
+                raise AuthenticationFailed('Staff is inactive!')
             login(request, user)
             cus_serializer = CustomerLoginSerializer(data={
                 'username': customer_obj.user.username,

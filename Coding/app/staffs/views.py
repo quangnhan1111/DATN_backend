@@ -29,6 +29,7 @@ class LoginProfileView(APIView):
             password = request.data.get('password')
 
             user_obj = User.objects.filter(username=username).first()
+            status_user = user_obj.staff.status
             if user_obj is None:
                 raise AuthenticationFailed('User not found!')
 
@@ -40,6 +41,8 @@ class LoginProfileView(APIView):
             if user is None:
                 raise AuthenticationFailed('Incorrect password!')
 
+            if status_user is False:
+                raise AuthenticationFailed('Staff is inactive!')
             login(request, user)
             serializer = StaffLoginSerializer(data={
                 'username': profile_obj.user.username,

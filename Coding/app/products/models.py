@@ -136,7 +136,6 @@ class CF(object):
         self.mu = np.zeros((self.n_users,))
         # print(self.mu) co n_users user trong he thong
         # [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
-        print("sa")
         for n in range(self.n_users):
             # row indices of rating done by user n since indices need to be integers, we need to convert
             # astype(np.int32) chuyen doi sang so nguyen int 32 bit
@@ -145,11 +144,11 @@ class CF(object):
             # [10 10 10  8  8  8  8  8  8  4  4  4  4  8  5  5  5  5  5  6  6  6  6  6 6  6]
             ids = np.where(users == n)[0].astype(np.int32)
             # print(ids)
+            # []: user 0 ko danh gia san pham nao
             # []
             # []
             # []
-            # []
-            # [ 9 10 11 12]
+            # [ 9 10 11 12]: user 4 danh gia san pham có stt la  9 10 11 12
             # [14 15 16 17 18]
             # [19 20 21 22 23 24 25]
             # []
@@ -190,6 +189,7 @@ class CF(object):
             # normalize
             self.Ybar_data[ids, 2] = ratings - self.mu[n]
 
+
         # print(self.Ybar_data)
         ################################################
         # form the rating matrix as a sparse matrix. Sparsity is important
@@ -200,7 +200,7 @@ class CF(object):
         self.Ybar = sparse.coo_matrix((self.Ybar_data[:, 2],
                                        (self.Ybar_data[:, 1], self.Ybar_data[:, 0])), (self.n_items, self.n_users))
 
-        # print(self.Ybar)
+        print(self.Ybar.toarray())
         #  (16, 10)      1
         #   (14, 10)      0
         #   (18, 10)      -1
@@ -230,12 +230,14 @@ class CF(object):
 
         # Chuyển đổi ma trận này sang định dạng Hàng thưa được nén
         self.Ybar = self.Ybar.tocsr()
-        print(self.Ybar)
+        print(self.Ybar.T)
+        print("YBAR.T")
+        print(self.Ybar.T)
 
     def similarity(self):
         eps = 1e-6
         self.S = self.dist_func(self.Ybar.T, self.Ybar.T)
-        # print(self.S)
+        print(self.S)
 
     def refresh(self):
         """
@@ -255,15 +257,34 @@ class CF(object):
         """
         # Step 1: find all users who rated i
         ids = np.where(self.Y_data[:, 1] == i)[0].astype(np.int32)
+        # print("Ádasd")
+        # print(ids)
+        # Ádasd
+        # [ 0  2 19]
+        # Ádasd
+        # [ 1 10 17]
+        # ....
+
         # Step 2:
         users_rated_i = (self.Y_data[ids, 0]).astype(np.int32)
+        print("Ádasd")
+        print(users_rated_i)
+
+
         # Step 3: find similarity btw the current user and others
         # who already rated i
         sim = self.S[u, users_rated_i]
         # Step 4: find the k most similarity users
         a = np.argsort(sim)[-self.k:]
+        print("SIMMMMMMMM")
+        print(sim)
+        print(a)
+        # [1. 0. 0.]
+        # [1 2 0]
+        # [0. 0. 1.]
         # and the corresponding similarity levels
         nearest_s = sim[a]
+        print(nearest_s)
         # How did each of 'near' users rated item i
         r = self.Ybar[i, users_rated_i[a]]
         if normalized:
@@ -291,7 +312,8 @@ class CF(object):
         # print(self.Y_data)
         ids = np.where(self.Y_data[:, 0] == u)[0]
         # vi tri phan tu thoa dieu kien trong self.Y_data
-        # print(ids)
+        print("ids")
+        print(np.where(self.Y_data[:, 0] == u))
         # [0 1 2]
 
         items_rated_by_u = self.Y_data[ids, 1].tolist()
@@ -302,6 +324,7 @@ class CF(object):
             if i not in items_rated_by_u:
                 # u = 10
                 rating = self.__pred(u, i)
+                # preduct user u va item thứ i
                 if rating > 0:
                     recommended_items.append(i)
 
