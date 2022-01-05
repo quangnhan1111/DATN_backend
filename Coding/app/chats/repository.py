@@ -65,6 +65,9 @@ class ChatRoomRepository:
         print(users)
         for user in users:
             objUpdate.users.add(user)
+        user_admin = User.objects.filter(groups__name='admin')
+        for admin in user_admin:
+            objUpdate.users.add(admin)
         objUpdate.save()
         serializer = ChatRoomSerializer(objUpdate)
         return serializer.data

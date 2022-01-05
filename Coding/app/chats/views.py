@@ -76,10 +76,10 @@ def room(request):
     temp_participants = []
     data = []
     users = ""
-    print(groups_participated)
+    print(assigned_groups)
     for chat_group in groups_participated:
         for participants in chat_group.users.values('id', 'username', 'email'):
-            print(participants)
+            # print(participants)
             temp_participants.append({
                 'id': participants['id'],
                 'username': participants['username'],

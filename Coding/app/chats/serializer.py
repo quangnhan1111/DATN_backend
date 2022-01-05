@@ -22,6 +22,7 @@ class ChatRoomSerializer(serializers.ModelSerializer):
         user_admin = User.objects.filter(groups__name='admin')
         for admin in user_admin:
             chat_room.users.add(admin)
+        print(chat_room.users)
         return chat_room
 
 
