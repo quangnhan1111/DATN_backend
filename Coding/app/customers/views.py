@@ -33,7 +33,7 @@ class LoginView(APIView):
             password = request.data.get('password')
             # print(User.objects.all())
             user_obj = User.objects.filter(username=username).first()
-            status_customer = user_obj.staff.status
+            status_customer = user_obj.customer.status
             if user_obj is None:
                 raise AuthenticationFailed('User not found!')
 

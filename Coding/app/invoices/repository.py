@@ -284,7 +284,9 @@ class InvoiceRepository:
                 return err
             product_attribute_int.save()
             total_price = total_price + number * request.data['listProduct'][i]['price']
-        if total_price - float(request.data['coupon']) > 0:
+        if request.data['coupon'] is None:
+            objUpdate.totalPrice = total_price
+        elif total_price - float(request.data['coupon']) > 0:
             objUpdate.totalPrice = total_price - request.data.get('coupon', 0),
         else:
             objUpdate.totalPrice = 0
