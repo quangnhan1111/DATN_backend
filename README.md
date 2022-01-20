@@ -91,7 +91,7 @@ b)post: (nếu lưu customer bởi admin thì tài khoản được tự động
 -Nếu Ổn:
 +Kiểm tra Username đã tồn tại hoăc đã bị deleted_at chưa
 +Kiểm tra  đã tồn tại hoăc đã bị deleted_at chưa
-+Store user và trả về mess thành 
++Store user và trả về customer 
 c)Update:
 -Kiểm tra Permission:  if has_permission(request.user, 'change_customer') or request.user.id == User.objects.get(customer=pk).id:
 -Update và trả về Customer mới.( nếu không có hoặc đã deleted_at trả về ERROR )
@@ -143,5 +143,78 @@ g)change_password trong Staff:
 -Kiểm tra Permission: if has_permission(user, 'change_customer') or request.user.id == User.objects.get(customer=pk).id:
 -Update password và trả về Staff có password ( nếu không có hoặc đã deleted_at trả về ERROR )
 
-II)Brands and Category and Subcate:
+II)Brands, Category, Subcate, Color, Coupon, Post, Role:
 
+1)CRUD Brand, Color, Coupon, Post:
+a)get-list:
+-get current_page ==> tinh ra start = (current_page-1)*per_page, end = current_page*per_page, per_page=10
+-Kiem tra Permission:  if has_permission(user, 'view_brand'):
+-Nếu Ổn: Trả về data.
+b)post: 
+-Kiểm tra Permission:   if has_permission(user, 'add_customer')
+-Nếu Ổn:
++Kiểm tra name Brand  đã tồn tại hoăc đã bị deleted_at chưa
++Kiểm tra  đã tồn tại hoăc đã bị deleted_at chưa ( Nếu có thì restore() )
++Store brand và trả về brand 
+c)Update:
+-Kiểm tra Permission:  if has_permission(user, 'change_brand'):
+-Update và trả về Customer mới.( nếu không có hoặc đã deleted_at trả về ERROR )
+d)Delete:
+-Kiểm tra Permission: if has_permission(user, ' if has_permission(user, 'delete_brand'):'):
+-Delete và trả về Customer đã bị delete(xóa mềm).( nếu không có hoặc đã deleted_at trả về ERROR )
+e)get-detail:
+-Kiểm tra Permission:     if has_permission(user, 'view_brand'):
+-Get detail và trả về chi tiết.( nếu không có hoặc đã deleted_at trả về ERROR )
+f)activate:
+-Kiểm tra Permission:  if has_permission(user, 'change_brand'):
+-Đổi và lưu lại status mới( nếu không có hoặc đã deleted_at trả về ERROR )
+
+2)Category
+-các chức năng như trên
+a)get_category_and_detail_subcategory():
+    def add_sub_into_cate(self, list_category, sub_list, item):
+        sub_list.append({
+            'id': item['subcategory'],
+            'name': item['subcategory__name']
+        })
+        list_category.append({
+            'id': item['id'],
+            'name': item['name'],
+            'children': sub_list
+        })
+
+    def get_category_and_detail_subcategory(self):
+        category = Category.objects.filter(deleted_at=False).exclude(subcategory=None).values('id', 'name',
+                                                                                              'status',
+                                                                                              'created_at',
+                                                                                              'updated_at',
+                                                                                              'subcategory__name',
+                                                                                              'subcategory')
+        list_category = []
+        for item in category:
+            if list_category:
+                flag = 0
+                for index in list_category:
+                    if index['id'] == item['id']:
+                        flag = 1
+                        index['children'].append({
+                            'id': item['subcategory'],
+                            'name': item['subcategory__name']
+                        })
+                        break
+                if flag == 0:
+                    sub_list = list()
+                    self.add_sub_into_cate(list_category, sub_list, item)
+            else:
+                sub_list = list()
+                self.add_sub_into_cate(list_category, sub_list, item)
+        print(list_category)
+        serializer = CategoryDetailSerializer(instance=list_category, many=True)
+        return serializer.data
+
+3)Subcategory:
+-Các chức năng trên tương tự
+a)get_sub_base_on_category(request, pk):
+-Get subcategory và trả về chi tiết subcate va parent-category của nó.( nếu không có hoặc đã deleted_at trả về ERROR )
+
+4)Role:
