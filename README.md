@@ -51,10 +51,11 @@ def create_auth_token_profile(sender, instance, created, **kwargs):
     if created:
         Token.objects.create(user=user)
         
--Tạo và kiểm soát Permission:
+-Tạo và kiểm soát Permission: Tao roles.py trong 
 https://viblo.asia/p/cau-chuyen-kiem-soat-truy-cap-trong-django-Qbq5QaDm5D8
 https://django-role-permissions.readthedocs.io/en/stable/roles.html#roles-file
 
+xem thêm: https://www.youtube.com/watch?v=epLhHHvJOSs&t=219s
 
 I)Customer and Staff:
 1)Register:
@@ -143,9 +144,9 @@ g)change_password trong Staff:
 -Kiểm tra Permission: if has_permission(user, 'change_customer') or request.user.id == User.objects.get(customer=pk).id:
 -Update password và trả về Staff có password ( nếu không có hoặc đã deleted_at trả về ERROR )
 
-II)Brands, Category, Subcate, Color, Coupon, Post, Role, Review:
+II)Brands, Category, Subcate, Color, Coupon, Post, Role, Review, Product:
 
-1)CRUD Brand, Color, Coupon, Post, Role, :
+1)CRUD Brand, Color, Coupon, Post, Role, Product:
 a)get-list:
 -get current_page ==> tinh ra start = (current_page-1)*per_page, end = current_page*per_page, per_page=10
 -Kiem tra Permission:  if has_permission(user, 'view_brand'):
@@ -289,6 +290,79 @@ ii)get_related_product_by_brand(request, pk):
 -Trả về data:
 Product.objects.filter(deleted_at=False, subcategory__deleted_at=False, subcategory__category__deleted_at=False, type='config', brand_id=pk)...
 
+iii)CRUD:
+Model và các chức năng xem chi tiết trong code !!!
+
+III)Invoice:
+a)getInvoicesForOneEmployee(self, pk):
+-get current_page ==> tinh ra start = (current_page-1)*per_page, end = current_page*per_page, per_page=10
+-Kiểm tra Permission:   if has_permission(user, 'can_view_invoice'):
+-Trả về data: Invoice.objects.filter(deleted_at=False, staff_id=pk)..... : thông tin các invoice của 1 staff đã xác  
+
+b)getInvoicesForOneCustomer(self, pk):
+Tương tự a nhưng đối vs Customer
+
+c)getInvoicesForEmployeeStatus(self):
+Tương Tự a nhưng đối vs all Staff 
+
+d)getInvoicesForCustomerStatus(self):
+Tương Tự a nhưng đối vs all Customer
+
+e)
+showOneInvoices( request, pk):
+showOneInvoicesAndShowEmployee(request, pk):
+showOneInvoicesAndShowCustomer(request, pk):
+-Tương Tự a nhưng lấy thông tin cụ thể của 1 invoice hoặc có thêm các thông tin liên quan đến product và staff hoặc 
+
+f)CRUD
+-list: Tương Tự
+-update: update paid_status và staff_id đã xác nhận đơn hàng đó.
+-delete: Tương Tự
+-add: Xem chi tiết trong code !!!
+
+IV)Sale:
+1)get_totel_user(request):
+-Kiểm tra Permission:   if has_permission(user, 'can_view_invoice'):
+-Lấy data về.
+
+==> Tương tự với các chức năng:
+get_total_product_sold_out
+get_sale_figure_by_staff
+get_sale_figure_by_day
+get_sale_figure_by_month:
+(
+sale_by_month = Invoice.objects.exclude(staff_id=None).annotate(total_sale=Sum('totalPrice'),
+                                                                        Month=Extract('updated_at', 'month'),
+                                                                        Year=Extract('updated_at', 'year'), ) \
+            .values('total_sale', 'Month', 'Year')
+)
 
 
+V)fakedata:
+-Xem chi tiết trong 
+cmd: python manage.py seed_data 
 
+Tham khảo: https://www.youtube.com/watch?v=8LHdbaV7Dvo&t=369s
+
+VI)Mail(Celery)
+Model ScheduleMail(models.Model) xem trong code
+
+-Tạo celery.py trong app(xem code) và thêm code celery trong __init__()
+
+-Trong tasks.py
+@shared_task
+def send_scheduled_mails():
+    mail = ScheduleMail.objects.all().first()
+    send_mail(subject=mail.subject, from_email=settings.EMAIL_HOST_USER,
+              recipient_list=[_.user.email for _ in CustomerModel.objects.all()],
+              message=mail.message,
+              fail_silently=True, html_message=mail.html_content)
+              
+              
+              
+ Tham Khảo:
+ https://toidicodedao.com/2019/10/08/message-queue-la-gi-ung-dung-microservice/
+ https://viblo.asia/p/tim-hieu-ve-celery-1VgZv4dr5Aw
+ https://docs.celeryproject.org/en/stable/userguide/periodic-tasks.html
+ https://www.youtube.com/watch?v=kdVXWCaRQVg
+ https://www.youtube.com/watch?v=K5stle-8eRY&t=389s
