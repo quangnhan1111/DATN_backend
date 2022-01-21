@@ -346,7 +346,7 @@ Tham khảo: https://www.youtube.com/watch?v=8LHdbaV7Dvo&t=369s
 
 VI)Mail(Celery)
 Model ScheduleMail(models.Model) xem trong code
-
+-settings.py
 -Tạo celery.py trong app(xem code) và thêm code celery trong __init__()
 
 -Trong tasks.py
@@ -358,7 +358,10 @@ def send_scheduled_mails():
               message=mail.message,
               fail_silently=True, html_message=mail.html_content)
               
-              
+     
+celery -A app beat -l info --pidfile =
+celery -A app worker -l INFO -P gevent
+
               
  Tham Khảo:
  https://toidicodedao.com/2019/10/08/message-queue-la-gi-ung-dung-microservice/
@@ -366,3 +369,20 @@ def send_scheduled_mails():
  https://docs.celeryproject.org/en/stable/userguide/periodic-tasks.html
  https://www.youtube.com/watch?v=kdVXWCaRQVg
  https://www.youtube.com/watch?v=K5stle-8eRY&t=389s
+
+
+
+VII)Notification(Websocket- Channel):
+-asgi.py
+-settings.py
+-wsgi.py
+-routings.py
+
+Tham Khảo: 
+https://viblo.asia/p/django-channels-vi-du-cap-nhat-real-time-trang-thai-online-offline-cua-nguoi-dung-maGK7kmAKj2
+https://codelearn.io/sharing/lap-trinh-web-socket-voi-python
+https://www.youtube.com/watch?v=F4nwRQPXD8w
+https://www.youtube.com/watch?v=wos1uhnd3qM&t=1922s
+
+
+
