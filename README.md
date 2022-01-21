@@ -143,9 +143,9 @@ g)change_password trong Staff:
 -Kiểm tra Permission: if has_permission(user, 'change_customer') or request.user.id == User.objects.get(customer=pk).id:
 -Update password và trả về Staff có password ( nếu không có hoặc đã deleted_at trả về ERROR )
 
-II)Brands, Category, Subcate, Color, Coupon, Post, Role:
+II)Brands, Category, Subcate, Color, Coupon, Post, Role, Review:
 
-1)CRUD Brand, Color, Coupon, Post:
+1)CRUD Brand, Color, Coupon, Post, Role, :
 a)get-list:
 -get current_page ==> tinh ra start = (current_page-1)*per_page, end = current_page*per_page, per_page=10
 -Kiem tra Permission:  if has_permission(user, 'view_brand'):
@@ -218,3 +218,77 @@ a)get_sub_base_on_category(request, pk):
 -Get subcategory và trả về chi tiết subcate va parent-category của nó.( nếu không có hoặc đã deleted_at trả về ERROR )
 
 4)Role:
+a)get_role_by_user(request, pk):
+-Kiểm tra Permission: if has_permission(user, 'view_role'):
+-Kiểm tra xem User có tồn tại hay bị xóa ko
+-Nếu ổn: 
+        data = User.objects.get(pk=pk)
+        name_group = list()
+        for i in data.groups.all():
+            name_group.append(i.name)
+        return name_group[0]
+-Trả về Response   
+b)get_users_by_role(request, pk):
+-Kiểm tra Permission: if has_permission(user, 'view_role'):
+-Kiểm tra xem Role có tồn tại hay bị xóa ko
+-Nếu ổn: Dùng filter ra các User trong  mỗi role và trả về Response 
+c)CRUD cho Role : Tương Tự
+
+5)Review:
+a)get_good_review:
+reviews = Review.objects.filter(star__gte=3, star__lte=5).order_by('-star')[0:4].values()
+b)get_all_review_by_product(self, pk):
+filter theo product_id và product_deleted_at = False.
+
+6)Product:
+a)sorted_high_to_low(request):
+-get current_page ==> tinh ra start = (current_page-1)*per_page, end = current_page*per_page, per_page=10
+-Trả về data:
+Product.objects.filter(deleted_at=False, subcategory__deleted_at=False, subcategory__category__deleted_at=False, type='config', brand__deleted_at=False, )......
+
+b)search_base_review(self, rating):
+-get current_page ==> tinh ra start = (current_page-1)*per_page, end = current_page*per_page, per_page=10
+-Trả về data:
+Product.objects.filter(deleted_at=False, subcategory__deleted_at=False, subcategory__category__deleted_at=False, type='config', brand__deleted_at=False, )......
+==>Lấy nhưng product mà product['avgStar'] > float(rating). 
+
+c)search_base_price(self, price_min, price_max):
+Tương Tự chức năng b)
+
+d)get_product_by_search(self, key):
+-get current_page ==> tinh ra start = (current_page-1)*per_page, end = current_page*per_page, per_page=10
+-Trả về data:
+Product.objects.filter(deleted_at=False, subcategory__deleted_at=False, subcategory__category__deleted_at=False, type='config', brand__deleted_at=False, name__contains=key)......
+
+e)get_wishlist_product(request, idCustomer):
+-get current_page ==> tinh ra start = (current_page-1)*per_page, end = current_page*per_page, per_page=10
+-Trả về data:
+WishlistProduct.objects.filter(product__deleted_at=False, product__subcategory__deleted_at=False,
+                                                          product__subcategory__category__deleted_at=False,
+                                                          product__brand__deleted_at=False,
+                                                          customer_id=idCustomer)....
+ 
+f)add_wishlist_product(request, idCustomer):
+product = WishlistProduct.objects.create(
+            customer_id=int(idCustomer),
+            product_id=request.data['product_id'],
+        )
+product.save()
+
+g)check_wishlist_product(selfS, idCustomer, idPro):
+if WishlistProduct.objects.filter(product_id=idPro, customer_id=idCustomer).exists():
+   return 1
+return 0
+
+h)get_new_product:  .order_by('-created_at')[0:4]
+
+i)get_best_product:  .order_by('-invoicedetail__number')[0:4]
+
+ii)get_related_product_by_brand(request, pk):
+-get current_page ==> tinh ra start = (current_page-1)*per_page, end = current_page*per_page, per_page=10
+-Trả về data:
+Product.objects.filter(deleted_at=False, subcategory__deleted_at=False, subcategory__category__deleted_at=False, type='config', brand_id=pk)...
+
+
+
+
