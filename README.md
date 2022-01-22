@@ -144,9 +144,9 @@ g)change_password trong Staff:
 -Kiểm tra Permission: if has_permission(user, 'change_customer') or request.user.id == User.objects.get(customer=pk).id:
 -Update password và trả về Staff có password ( nếu không có hoặc đã deleted_at trả về ERROR )
 
-II)Brands, Category, Subcate, Color, Coupon, Post, Role, Review, Product:
+II)Brands, Category, Subcate, Color, Coupon, Post, Role, Review, Product, ChatRoom:
 
-1)CRUD Brand, Color, Coupon, Post, Role, Product:
+1)CRUD Brand, Color, Coupon, Post, Role, Product, ChatRoom:
 a)get-list:
 -get current_page ==> tinh ra start = (current_page-1)*per_page, end = current_page*per_page, per_page=10
 -Kiem tra Permission:  if has_permission(user, 'view_brand'):
@@ -376,7 +376,10 @@ VII)Notification(Websocket- Channel):
 -asgi.py
 -settings.py
 -wsgi.py
+
 -routings.py
+-consumer.py
+-model.py 
 
 Tham Khảo: 
 https://viblo.asia/p/django-channels-vi-du-cap-nhat-real-time-trang-thai-online-offline-cua-nguoi-dung-maGK7kmAKj2
@@ -385,4 +388,112 @@ https://www.youtube.com/watch?v=F4nwRQPXD8w
 https://www.youtube.com/watch?v=wos1uhnd3qM&t=1922s
 
 
+VIII)Chat
+1)history:
+data = ChatMessage.objects.filter(chat_room=id_room).values('id', 'chat_room', 'username', 'message', 'created_at', 'updated_at')
 
+2)display_room:
+@api_view(['GET'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+@csrf_protect
+def room(request):
+    assigned_groups = list(request.user.chatroom_set.values_list('id', flat=True))
+    groups_participated = ChatRoom.objects.filter(id__in=assigned_groups, deleted_at=False, status=True)
+    temp_participants = []
+    data = []
+    users = ""
+    print(assigned_groups)
+    for chat_group in groups_participated:
+        for participants in chat_group.users.values('id', 'username', 'email'):
+            # print(participants)
+            temp_participants.append({
+                'id': participants['id'],
+                'username': participants['username'],
+                'email': participants['email']
+            })
+            if participants['username'] == request.user.username:
+                users += "you, "
+            else:
+                users += participants['username'] + ", "
+        data.append({
+            'groups_participated': {
+                'id': chat_group.id,
+                'name': chat_group.name,
+                # 'description': chat_group.description,
+                # 'mute_notifications': chat_group.mute_notifications,
+                'temp_participants': temp_participants,
+                'users': users,
+                'username_of_current_user': request.user.username
+            },
+        })
+        users = ""
+        temp_participants = []
+    content = response(data, 'successfully', True)
+    return Response(data=content, status=status.HTTP_200_OK)
+    
+ 3)chat-real time:
+ 
+@api_view(['POST'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def messages_page(request):
+    serializer = ChatMessageSerializer(data={
+        'chat_room': request.data['chat_room'],
+        'username': request.data['username'],
+        'message': request.data['message'],
+    })
+    serializer.is_valid(raise_exception=True)
+    serializer.save()
+    # data = ChatMessage.objects.all().values('id', 'chat_room', 'username', 'message', 'created_at', 'updated_at')
+    # print(list(data))
+    # serializer = ChatMessageSerializer(data=data, many=True)
+    # serializer.is_valid(raise_exception=True)
+    # serializer.save()
+    pusher_client.trigger('chat', 'message', serializer.data)
+    # notification
+    try:
+        name_chat_room = ChatRoom.objects.get(id=request.data['chat_room']).name
+        obj_notification = MessageNotifications()
+        obj_notification.notification = "New Message in room " + name_chat_room + \
+                                        " by " + request.data['username']
+        obj_notification.save()
+    except:
+        content = response('ERROR', 'successfully', True)
+        return Response(data=content, status=status.HTTP_404_NOT_FOUND)
+    # # end notification
+    content = response('serializer.data', 'successfully', True)
+    return Response(data=content, status=status.HTTP_200_OK)
+
+
+
+
+Tham khảo: 
+https://viblo.asia/p/django-channels-vi-du-cap-nhat-real-time-trang-thai-online-offline-cua-nguoi-dung-maGK7kmAKj2
+https://www.youtube.com/watch?v=SZlsP5uxYjk&t=555s
+https://www.youtube.com/watch?v=VztX_LyVSzM&t=30s
+
+
+IX)AI-Model Recommendation System:
+1)print_RS:
+@api_view(['GET'])
+def RS(request):
+    data_base = Review.objects.values_list('customer_id', 'product_id', 'star')
+    rate_train = np.array(data_base)
+    rate_test = np.array(data_base)
+    print(rate_test)
+    rs = CF(rate_test, k=10, uuCF=1)
+    rs.fit()
+    n_tests = rate_test.shape[0]
+    SE = 0  # squared error
+    for n in range(n_tests):
+        pred = rs.pred(rate_test[n, 0], rate_test[n, 1], normalized=0)
+        SE += (pred - rate_test[n, 2]) ** 2
+    RMSE = np.sqrt(SE / n_tests)
+    print(f'User-user CF, RMSE = {RMSE}')
+    return Response(rs.print_recommendation(10), status=status.HTTP_200_OK)
+
+
+
+Tham Khảo:
+https://machinelearningcoban.com/2017/05/24/collaborativefiltering/
