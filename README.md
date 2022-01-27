@@ -149,6 +149,7 @@ II)Brands, Category, Subcate, Color, Coupon, Post, Role, Review, Product, ChatRo
 1)CRUD Brand, Color, Coupon, Post, Role, Product, ChatRoom:
 a)get-list:
 -get current_page ==> tinh ra start = (current_page-1)*per_page, end = current_page*per_page, per_page=10
+-search_value = request.GET.get('search', ''): API index sử dụng paginate và search_value.
 -Kiem tra Permission:  if has_permission(user, 'view_brand'):
 -Nếu Ổn: Trả về data.
 b)post: 
