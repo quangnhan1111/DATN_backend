@@ -84,6 +84,7 @@ b)Staff: (Làm tương tự)
 4)CRUD Customer:
 a)get-list:
 -get current_page ==> tinh ra start = (current_page-1)*per_page, end = current_page*per_page, per_page=10
+- search_value = request.GET.get('search', '') ==> API search( ORM:   .filter(Q(user__username__icontains=search_value) | Q(user__email__icontains=search_value)) )
 -Kiem tra Permission:  if has_permission(user, 'view_customer'):
 -Nếu Ổn: Trả về data.
 ==>ORM: .annotate(full_name=Concat('user__first_name', Value(' '), 'user__last_name'): nối field
