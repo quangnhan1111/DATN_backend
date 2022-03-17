@@ -61,7 +61,7 @@ I)Customer and Staff:
 1)Register:
 -Sau khi lấy data:
 +Kiểm tra username đó đã có trong hệ thông hay đã bị deleted_at hay chưa
-+Kiểm tra  đó đã có trong hệ thông hay đã bị deleted_at hay chưa
++Kiểm tra email đó đã có trong hệ thông hay đã bị deleted_at hay chưa
 -Nếu Ổn: Tạo auth_token = str(uuid.uuid4()) còn is_verify và status mặc định là False và lưu cùng vs các dữ liệu khác trong bảng 
 -send_mail_after_registration(email, auth_token): gửi một cái  http://127.0.0.1:8000/api/v1/verify/{auth_token} tới email đó
 -Return ...
@@ -79,7 +79,7 @@ a)Customer:
 +kiểm tra customer is not verified check your mail
 +kiểm tra xem customer có active 
 -Nếu Ổn: Tạo Token cho customer đó và trả về data gồm: token, group_name và các dữ liẹu cá nhân của customer
-b)Staff: (Làm tương tự)
+b)Staff: (Làm tương tự không kiểm tra verify email)
 
 4)CRUD Customer:
 a)get-list:
